@@ -25,18 +25,10 @@ using f16 = std::float16_t;
 #else
 using f16 = InvalidFloat16Tag;
 #endif
-#ifdef __STDCPP_FLOAT32_T__
-using f32 = std::float32_t;
-#else
 static_assert(std::numeric_limits<float>::is_iec559, "There are no types compliant with IEC 559 binary32.");
 using f32 = float;
-#endif
-#ifdef __STDCPP_FLOAT64_T__
-using f64 = std::float64_t;
-#else
 static_assert(std::numeric_limits<double>::is_iec559, "There are no types compliant with IEC 559 binary64.");
 using f64 = double;
-#endif
 #ifdef __STDCPP_FLOAT128_T__
 using f128 = std::float128_t;
 #elif defined(__SIZEOF_FLOAT128__)
