@@ -312,6 +312,7 @@ public:
   constexpr const_reference max() const noexcept { return data[mx]; }
   [[nodiscard]] constexpr bool empty() const noexcept { return data.empty(); }
   constexpr u32 size() const noexcept { return data.size(); }
+  constexpr u32 capacity() const noexcept { return data.capacity(); }
   constexpr void reserve(u32 n) { data.reserve(n); }
   constexpr void push(const T& x) {
     data.push_back(x);
