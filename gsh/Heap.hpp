@@ -37,6 +37,37 @@ public:
   constexpr Heap& operator=(Heap&&) noexcept(std::is_nothrow_move_assignable_v<Comp>) = default;
 private:
   constexpr static bool nothrow_op = std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_assignable_v<T> && std::is_nothrow_invocable_v<Comp, const T&, const T&>;
+  GSH_INTERNAL_INLINE constexpr u32 max_child_idx(const u32 ch, const u32 n) const noexcept(std::is_nothrow_invocable_v<Comp, const T&, const T&>) {
+    u32 m = ch;
+    switch(n - ch) {
+    case 4: {
+      const u32 a = ch + static_cast<bool>(std::invoke(comp_func, data[ch], data[ch + 1]));
+      const u32 b = ch + 2 + static_cast<bool>(std::invoke(comp_func, data[ch + 2], data[ch + 3]));
+      m = a + static_cast<bool>(std::invoke(comp_func, data[a], data[b])) * (b - a);
+      break;
+    }
+    case 3:
+      m += static_cast<bool>(std::invoke(comp_func, data[ch], data[ch + 1]));
+      m += static_cast<bool>(std::invoke(comp_func, data[m], data[ch + 2])) * (ch + 2 - m);
+      break;
+    case 2:
+      m += static_cast<bool>(std::invoke(comp_func, data[ch], data[ch + 1]));
+      break;
+    case 1:
+      break;
+    default: Unreachable();
+    }
+    return m;
+  }
+  GSH_INTERNAL_INLINE constexpr void fix_last_internal(const u32 idx, const u32 n) noexcept(nothrow_op) {
+    const u32 ch = idx * 4 + 1;
+    const u32 m = max_child_idx(ch, n);
+    if(std::invoke(comp_func, data[idx], data[m])) {
+      T tmp = std::move(data[idx]);
+      data[idx] = std::move(data[m]);
+      data[m] = std::move(tmp);
+    }
+  }
   GSH_INTERNAL_INLINE constexpr void push_up(u32 idx) noexcept(nothrow_op) {
     T tmp = std::move(data[idx]);
     u32 cur = idx;
@@ -72,23 +103,7 @@ private:
     }
     if(cur <= lim) {
       const u32 ch = cur * 4 + 1;
-      u32 m = ch;
-      switch(n - ch) {
-      case 4: {
-        const u32 a = ch + static_cast<bool>(std::invoke(comp_func, data[ch], data[ch + 1]));
-        const u32 b = ch + 2 + static_cast<bool>(std::invoke(comp_func, data[ch + 2], data[ch + 3]));
-        m = a + static_cast<bool>(std::invoke(comp_func, data[a], data[b])) * (b - a);
-        break;
-      }
-      case 3: {
-        m += static_cast<bool>(std::invoke(comp_func, data[ch], data[ch + 1]));
-        m += static_cast<bool>(std::invoke(comp_func, data[m], data[ch + 2])) * (ch + 2 - m);
-        break;
-      }
-      case 2: m += static_cast<bool>(std::invoke(comp_func, data[ch], data[ch + 1])); break;
-      case 1: break;
-      default: Unreachable();
-      }
+      const u32 m = max_child_idx(ch, n);
       if(std::invoke(comp_func, tmp, data[m])) {
         data[cur] = std::move(data[m]);
         cur = m;
@@ -97,9 +112,17 @@ private:
     data[cur] = std::move(tmp);
   }
   constexpr void make_heap() noexcept(nothrow_op) {
-    if(data.size() <= 1) [[unlikely]]
+    const u32 n = data.size();
+    if(n <= 1) [[unlikely]]
       return;
-    for(u32 i = (data.size() - 2) / 4 + 1; i--;) push_down(i);
+    if(n <= 5) [[unlikely]] {
+      fix_last_internal(0, n);
+      return;
+    }
+    const u32 lim = (n - 2) / 4;
+    const u32 upper_lim = (lim - 1) / 4;
+    for(u32 i = lim + 1; i-- > upper_lim + 1;) fix_last_internal(i, n);
+    for(u32 i = upper_lim + 1; i--;) push_down(i);
   }
 public:
   constexpr void clear() noexcept { data.clear(); }
