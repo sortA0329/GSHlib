@@ -314,6 +314,8 @@ public:
   constexpr u32 size() const noexcept { return data.size(); }
   constexpr u32 capacity() const noexcept { return data.capacity(); }
   constexpr void reserve(u32 n) { data.reserve(n); }
+  constexpr auto& container() noexcept { return data; }
+  constexpr const auto& container() const noexcept { return data; }
   constexpr void push(const T& x) {
     data.push_back(x);
     push_up();
