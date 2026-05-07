@@ -472,7 +472,7 @@ public:
           cnt = mint.inc(cnt);
           fac[i] = mint.mul(fac[i - 1], cnt);
         }
-        finv.back() = mint.inv(fac.back());
+        finv[mx - 1] = mint.inv(fac[mx - 1]);
         for(u32 i = mx - 1; i != 2; --i) {
           finv[i - 1] = mint.mul(finv[i], cnt);
           cnt = mint.dec(cnt);
@@ -501,7 +501,7 @@ public:
           cnt = mint.inc(cnt);
           fac[i] = mint.mul(fac[i - 1], cnt);
         }
-        finv.back() = mint.inv(fac.back());
+        finv[mx - 1] = mint.inv(fac[mx - 1]);
         for(u32 i = mx - 1; i != 2; --i) {
           finv[i - 1] = mint.mul(finv[i], cnt);
           cnt = mint.dec(cnt);
