@@ -230,9 +230,13 @@ public:
 #else
     struct stat st;
     fstat(0, &st);
-    buf = reinterpret_cast<c8*>(mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, 0, 0));
+    const std::size_t page = static_cast<std::size_t>(sysconf(_SC_PAGESIZE));
+    const std::size_t size = static_cast<std::size_t>(st.st_size);
+    const std::size_t file_size = (size + page - 1) / page * page;
+    buf = reinterpret_cast<c8*>(mmap(nullptr, file_size + page, PROT_READ, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+    if(file_size != 0) mmap(buf, file_size, PROT_READ, MAP_PRIVATE | MAP_FIXED, 0, 0);
     cur = buf;
-    eof = buf + st.st_size;
+    eof = buf + size;
 #endif
   }
   void reload() const {}
